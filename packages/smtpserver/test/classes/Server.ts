@@ -6,7 +6,7 @@ import { defaultTransportOptions } from '../01receive/Helpers';
 
 export class Server
 {
-    #serverFile = process.argv.find(f=>f.startsWith('--serverFile='))?.substring(13) || 'dist/server.js';
+    #serverFile = process.argv.find(f=>f.startsWith('--serverFile='))?.substring(13) || '../../dist/server.js';
     #configFile = 'testconfig.yml';
     #proc: ChildProcessWithoutNullStreams | undefined;
 

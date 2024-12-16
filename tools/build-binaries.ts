@@ -16,7 +16,7 @@ const binNamePrefix = 'smtp2graph';
 (async ()=>{
     console.log('Bundling scripts...');
     try {
-        await runCommand('npm run build');
+        await runCommand('npm run build -w @smtp2graph/smtpserver');
     } catch(error) {
         console.error('Failed to bundle.', error);
         return;

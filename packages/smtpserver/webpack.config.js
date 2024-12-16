@@ -7,7 +7,7 @@ module.exports = (env, argv) => ({
         server: './src/server.ts',
     },
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, '../../dist'),
         filename: '[name].js',
     },
     module: {
@@ -24,7 +24,7 @@ module.exports = (env, argv) => ({
     },
     plugins: [
         new webpack.DefinePlugin({
-            VERSION: JSON.stringify(require("./package.json").version),
+            VERSION: JSON.stringify(require("../../package.json").version),
             DEBUG: (argv.mode!=='production'),
         }),
     ],
