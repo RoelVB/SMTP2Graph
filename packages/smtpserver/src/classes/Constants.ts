@@ -1,2 +1,5 @@
+import { createLogger } from '@smtp2graph/common/src/Logger';
 
 export class UnrecoverableError extends Error { }
+
+export const { log, prefixedLog } = createLogger('smtpserver', DEBUG?'verbose':'info');

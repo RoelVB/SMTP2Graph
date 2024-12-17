@@ -1,5 +1,5 @@
 import { Config } from '@smtp2graph/common/src/Config';
-import { log } from './classes/Logger';
+import { log } from './classes/Constants';
 import { MailQueue } from './classes/MailQueue';
 import { SMTPServer } from './classes/SMTPServer';
 

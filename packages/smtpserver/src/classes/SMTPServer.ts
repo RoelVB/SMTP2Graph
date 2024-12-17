@@ -7,7 +7,7 @@ import addressparser, { Address } from 'nodemailer/lib/addressparser';
 const Splitter = require('mailsplit').Splitter;
 const Joiner = require('mailsplit').Joiner;
 import { Config } from '@smtp2graph/common/src/Config';
-import { prefixedLog } from './Logger';
+import { prefixedLog } from './Constants';
 import { MailQueue } from './MailQueue';
 
 const log = prefixedLog('SMTPServer');

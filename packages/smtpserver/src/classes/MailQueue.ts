@@ -3,7 +3,7 @@ import path from 'path';
 import chokidar from 'chokidar';
 import { Mutex } from 'async-mutex';
 import { Mailer } from './Mailer';
-import { prefixedLog } from './Logger';
+import { prefixedLog } from './Constants';
 import { Config } from '@smtp2graph/common/src/Config';
 import { UnrecoverableError } from './Constants';
 

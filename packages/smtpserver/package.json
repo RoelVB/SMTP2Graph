@@ -45,7 +45,6 @@
     "nodemailer": "^6.9.8",
     "rate-limiter-flexible": "^4.0.0",
     "smtp-server": "^3.13.0",
-    "winston": "^3.11.0",
     "yaml": "^2.3.4"
   }
 }
