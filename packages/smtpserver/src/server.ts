@@ -1,4 +1,4 @@
-import { Config } from './classes/Config';
+import { Config } from '@smtp2graph/common/src/Config';
 import { log } from './classes/Logger';
 import { MailQueue } from './classes/MailQueue';
 import { SMTPServer } from './classes/SMTPServer';

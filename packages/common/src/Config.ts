@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { parse as parseYaml } from 'yaml';
 import IPCIDR from 'ip-cidr';
-import { AxiosProxyConfig } from 'axios';
+import type { AxiosProxyConfig } from 'axios';
 
 // Set the working dir based on the --baseDir argument
 const baseDir = process.argv.find(arg=>arg.startsWith('--baseDir=') && arg.length > 10)?.substring(10);

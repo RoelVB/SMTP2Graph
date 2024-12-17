@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { stringify } from 'yaml';
-import type { IConfig } from '../../src/classes/Config';
+import type { IConfig } from '@smtp2graph/common/src/Config';
 import { defaultTransportOptions } from '../01receive/Helpers';
 
 export class Server

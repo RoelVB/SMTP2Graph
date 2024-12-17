@@ -1,6 +1,6 @@
 import { INetworkModule, NetworkRequestOptions, NetworkResponse } from "@azure/msal-node";
 import axios, { AxiosRequestConfig } from "axios";
-import { Config } from "./Config";
+import { Config } from "@smtp2graph/common/src/Config";
 
 export class MsalProxy implements INetworkModule
 {

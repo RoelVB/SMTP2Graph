@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, isAxiosError } fr
 import { Base64Encode } from 'base64-stream';
 import addressparser from 'nodemailer/lib/addressparser';
 import { ConfidentialClientApplication } from '@azure/msal-node';
-import { Config } from './Config';
+import { Config } from '@smtp2graph/common/src/Config';
 import { UnrecoverableError } from './Constants';
 import { MsalProxy } from './MsalProxy';
 

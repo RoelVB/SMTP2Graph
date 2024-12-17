@@ -1,21 +1,14 @@
 {
+  "extends": "../../tsconfig.json",
+  "exclude": [
+    "test",
+    "tools"
+  ],
+  "ts-node": {
+    "transpileOnly": true,
     "compilerOptions": {
-      "target": "ES2017",
-      "module": "ESNext",
-      "moduleResolution": "Node",
-      "strict": true,
-      "sourceMap": true,
-      "allowSyntheticDefaultImports": true
-    },
-    "exclude": [
-      "test",
-      "tools"
-    ],
-    "ts-node": {
-      "transpileOnly": true,
-      "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext"
-      }
-    }  
-  }
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext"
+    }
+  }  
+}

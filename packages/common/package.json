@@ -1,0 +1,11 @@
+{
+  "name": "@smtp2graph/common",
+  "version": "*",
+  "devDependencies": {
+    "axios": "^1.6.5"
+  },
+  "dependencies": {
+    "ip-cidr": "^4.0.0",
+    "yaml": "^2.6.1"
+  }
+}
