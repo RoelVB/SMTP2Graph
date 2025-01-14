@@ -1,6 +1,6 @@
 import { INetworkModule, NetworkRequestOptions, NetworkResponse } from "@azure/msal-node";
 import axios, { AxiosRequestConfig } from "axios";
-import { Config } from "@smtp2graph/common/src/Config";
+import { StaticConfig } from "./Constants";
 
 export class MsalProxy implements INetworkModule
 {
@@ -21,7 +21,7 @@ export class MsalProxy implements INetworkModule
             method: method,
             headers: options.headers,
             data: options.body,
-            proxy: Config.httpProxyConfig,
+            proxy: StaticConfig.httpProxyConfig,
         };
 
         const response = await axios(requestConfig);

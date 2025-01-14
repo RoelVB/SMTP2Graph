@@ -2,6 +2,7 @@ node_modules
 dist
 mailroot
 config.yml
+/users
 /wix
 *.log
 .env

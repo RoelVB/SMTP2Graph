@@ -5,9 +5,9 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, isAxiosError } fr
 import { Base64Encode } from 'base64-stream';
 import addressparser from 'nodemailer/lib/addressparser';
 import { ConfidentialClientApplication } from '@azure/msal-node';
-import { Config } from '@smtp2graph/common/src/Config';
 import { UnrecoverableError } from './Constants';
 import { MsalProxy } from './MsalProxy';
+import { StaticConfig } from './Constants';
 
 export class MailboxAccessDenied extends UnrecoverableError { }
 export class InvalidMailContent extends UnrecoverableError { }
@@ -19,24 +19,24 @@ export class Mailer
     /** Prevent sending more than 4 messages in parallel (see: https://learn.microsoft.com/en-us/graph/throttling-limits#outlook-service-limits) */
     static #sendSemaphore = new Semaphore(4);
 
-    static #msalClient = (Config.clientId && (Config.clientSecret || (Config.clientCertificateThumbprint && Config.clientCertificateKeyPath)))?new ConfidentialClientApplication({
+    static #msalClient = (StaticConfig.clientId && (StaticConfig.clientSecret || (StaticConfig.clientCertificateThumbprint && StaticConfig.clientCertificateKeyPath)))?new ConfidentialClientApplication({
         auth: {
-            authority: Config.msalAuthority,
-            clientId: Config.clientId,
-            clientSecret: Config.clientSecret,
-            clientCertificate: Config.clientCertificateThumbprint && Config.clientCertificateKeyPath?{
-                thumbprint: Config.clientCertificateThumbprint,
-                privateKey: Config.clientCertificateKey!,
+            authority: StaticConfig.msalAuthority,
+            clientId: StaticConfig.clientId,
+            clientSecret: StaticConfig.clientSecret,
+            clientCertificate: StaticConfig.clientCertificateThumbprint && StaticConfig.clientCertificateKeyPath?{
+                thumbprint: StaticConfig.clientCertificateThumbprint,
+                privateKey: StaticConfig.clientCertificateKey!,
             }:undefined,
         },
-        system: Config.httpProxyConfig?{networkClient: new MsalProxy()}:undefined, // We use our custom implementation, because the `proxyUrl` property doesn't want to work
+        system: StaticConfig.httpProxyConfig?{networkClient: new MsalProxy()}:undefined, // We use our custom implementation, because the `proxyUrl` property doesn't want to work
     }):undefined;
 
     static async sendEml(filePath: string)
     {
         return this.#sendSemaphore.runExclusive(async ()=>{
             // Determine the sender
-            let sender = Config.forceMailbox;
+            let sender = StaticConfig.forceMailbox;
             if(!sender) // There's no forced sender in the config, so we get it from the mail data
             {
                 const senderObj = await this.#findSender(filePath);
@@ -60,7 +60,7 @@ export class Mailer
                         'User-Agent': `SMPT2Graph/${VERSION}`,
                     },
                     timeout: 10000,
-                    proxy: Config.httpProxyConfig,
+                    proxy: StaticConfig.httpProxyConfig,
                 });
             } catch(error: any) {
                 if('response' in error && (error as AxiosError).response?.data)

@@ -3,12 +3,5 @@
   "exclude": [
     "test",
     "tools"
-  ],
-  "ts-node": {
-    "transpileOnly": true,
-    "compilerOptions": {
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext"
-    }
-  }  
+  ]
 }

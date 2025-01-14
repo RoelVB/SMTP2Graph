@@ -3,8 +3,7 @@ import path from 'path';
 import chokidar from 'chokidar';
 import { Mutex } from 'async-mutex';
 import { Mailer } from './Mailer';
-import { prefixedLog } from './Constants';
-import { Config } from '@smtp2graph/common/src/Config';
+import { StaticConfig, prefixedLog } from './Constants';
 import { UnrecoverableError } from './Constants';
 
 const log = prefixedLog('MailQueue');
@@ -30,7 +29,7 @@ export class MailQueue
      */
     constructor(rootPath: string = 'mailroot')
     {
-        this.#paused = Config.mode === 'receive';
+        this.#paused = StaticConfig.mode === 'receive';
         this.#rootPath = rootPath;
         this.#tempPath = path.join(rootPath, 'temp');
         this.#queuePath = path.join(rootPath, 'queue');
@@ -73,10 +72,10 @@ export class MailQueue
 
     #addToRetryQueue(filename: string)
     {
-        if(Config.sendRetryLimit) // Retrying is enabled?
+        if(StaticConfig.sendRetryLimit) // Retrying is enabled?
         {
             const data = this.#retryQueue.get(filename);
-            if(data && data.retryCount >= Config.sendRetryLimit) // This file is already in the queue and exceeded the retry limit?
+            if(data && data.retryCount >= StaticConfig.sendRetryLimit) // This file is already in the queue and exceeded the retry limit?
             {
                 try {
                     this.#retryQueue.delete(filename); // Remove from queue
@@ -88,7 +87,7 @@ export class MailQueue
             else // This file should be retried
             {
                 const retryAfter = new Date();
-                retryAfter.setMinutes(retryAfter.getMinutes()+Config.sendRetryInterval);
+                retryAfter.setMinutes(retryAfter.getMinutes()+StaticConfig.sendRetryInterval);
                 this.#retryQueue.set(filename, {retryAfter, retryCount: (data?.retryCount || 0)+1});
             }
 

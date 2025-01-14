@@ -4,7 +4,9 @@
     "version": "1.1.2",
     "description": "SMTP server to relay over MSGraph API / Microsoft 365 Exchange Online",
     "scripts": {
-        "build-binaries": "ts-node tools/build-binaries.ts"
+        "build:binaries": "ts-node tools/build-binaries.ts",
+        "watch:smtpserver": "npm run watch -w @smtp2graph/smtpserver",
+        "watch:webserver": "npm run watch -w @smtp2graph/webserver"
     },
     "repository": {
         "type": "git",

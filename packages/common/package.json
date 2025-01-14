@@ -2,9 +2,11 @@
   "name": "@smtp2graph/common",
   "version": "*",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "axios": "^1.6.5"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "ip-cidr": "^4.0.0",
     "winston": "^3.11.0",
     "yaml": "^2.6.1"

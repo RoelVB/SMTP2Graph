@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { parse as parseYaml } from 'yaml';
-import IPCIDR from 'ip-cidr';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import IPCIDR from 'ip-cidr';   
 import type { AxiosProxyConfig } from 'axios';
 
 // Set the working dir based on the --baseDir argument
@@ -77,10 +77,16 @@ export class InvalidConfig extends Error { }
 
 export class Config
 {
-    static #configData: IConfig | undefined;
+    #configData: IConfig | undefined;
+    #configFile: string | undefined;
+
+    constructor(configData?: IConfig)
+    {
+        this.#configData = configData;
+    }
 
     /** Check if the config file is valid */
-    static validate()
+    validate()
     {
         const isStringValue = (val: any)=>{
             return (typeof val === 'string' && val);
@@ -105,8 +111,10 @@ export class Config
             throw new InvalidConfig('"retryInterval" may not be smaller than 1');
         else if(this.smtpRequireAuth && !this.smtpUsers?.length)
             throw new InvalidConfig('"requireAuth" enabled without users defined');
-        else if(this.#config.receive?.maxSize && (typeof this.#config.receive.maxSize !== 'string' || !/^\d+k|m$/i.test(this.#config.receive.maxSize)))
+        else if(this.config.receive?.maxSize && (typeof this.config.receive.maxSize !== 'string' || !/^\d+k|m$/i.test(this.config.receive.maxSize)))
             throw new InvalidConfig('"maxSize" property is invalid');
+        else if(typeof this.smtpPort !== 'number')
+            throw new InvalidConfig('Property "receive.port" should be a number');
         else if(this.smtpListenIp && !IPCIDR.isValidAddress(this.smtpListenIp))
             throw new InvalidConfig('"listenAddress" property is invalid');
         else if(this.smtpTlsKeyPath && !fs.existsSync(this.smtpTlsKeyPath))
@@ -125,24 +133,24 @@ export class Config
             throw new InvalidConfig(`Property "receive.authLimit.duration" should be a number`);
         else if(this.smtpAuthLimitDuration && typeof this.smtpAuthLimitDuration !== 'number')
             throw new InvalidConfig(`Property "receive.authLimit.limit" should be a number`);
-        else if(this.#config.httpProxy && typeof this.#config.httpProxy.host !== 'string')
+        else if(this.config.httpProxy && typeof this.config.httpProxy.host !== 'string')
             throw new InvalidConfig(`Property "httpProxy.host" should be a string`);
-        else if(this.#config.httpProxy && typeof this.#config.httpProxy.port !== 'number')
+        else if(this.config.httpProxy && typeof this.config.httpProxy.port !== 'number')
             throw new InvalidConfig(`Property "httpProxy.port" should be a number`);
-        else if(this.#config.httpProxy?.protocol && !['http','https'].includes(this.#config.httpProxy.protocol))
+        else if(this.config.httpProxy?.protocol && !['http','https'].includes(this.config.httpProxy.protocol))
             throw new InvalidConfig(`Property "httpProxy.protocol" should be a http or https`);
-        else if(this.#config.httpProxy?.username && !this.#config.httpProxy.password)
+        else if(this.config.httpProxy?.username && !this.config.httpProxy.password)
             throw new InvalidConfig(`Property "httpProxy.username" is defined without "httpProxy.password"`);
-        else if(this.#config.httpProxy?.password && !this.#config.httpProxy.username)
+        else if(this.config.httpProxy?.password && !this.config.httpProxy.username)
             throw new InvalidConfig(`Property "httpProxy.password" is defined without "httpProxy.username"`);
     }
 
-    static get mode()
+    get mode()
     {
-        return this.#config.mode.toLowerCase() as IConfig['mode'];
+        return this.config.mode.toLowerCase() as IConfig['mode'];
     }
 
-    static get msalAuthority()
+    get msalAuthority()
     {
         if(/^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}$/i.test(this.clientTenant || '')) // We got a GUID instead of name?
             return `https://login.microsoftonline.com/${this.clientTenant}`;
@@ -150,98 +158,98 @@ export class Config
             return `https://login.microsoftonline.com/${this.clientTenant}.onmicrosoft.com`;
     }
 
-    static get clientTenant()
+    get clientTenant()
     {
-        return this.#config.send?.appReg.tenant;
+        return this.config.send?.appReg.tenant;
     }
 
-    static get clientId()
+    get clientId()
     {
-        return this.#config.send?.appReg.id;
+        return this.config.send?.appReg.id;
     }
 
-    static get clientSecret()
+    get clientSecret()
     {
-        return this.#config.send?.appReg.secret;
+        return this.config.send?.appReg.secret;
     }
 
-    static get clientCertificateThumbprint()
+    get clientCertificateThumbprint()
     {
-        return this.#config.send?.appReg.certificate?.thumbprint;
+        return this.config.send?.appReg.certificate?.thumbprint;
     }
 
-    static get clientCertificateKeyPath()
+    get clientCertificateKeyPath()
     {
-        return this.#config.send?.appReg.certificate?.privateKeyPath;
+        return this.config.send?.appReg.certificate?.privateKeyPath;
     }
 
-    static get clientCertificateKey()
+    get clientCertificateKey()
     {
         if(this.clientCertificateKeyPath && fs.existsSync(this.clientCertificateKeyPath))
             return fs.readFileSync(this.clientCertificateKeyPath).toString();
     }
 
-    static get sendRetryLimit()
+    get sendRetryLimit()
     {
-        return this.#config.send?.retryLimit ?? 3;
+        return this.config.send?.retryLimit ?? 3;
     }
 
-    static get sendRetryInterval()
+    get sendRetryInterval()
     {
-        return this.#config.send?.retryInterval ?? 5;
+        return this.config.send?.retryInterval ?? 5;
     }
 
-    static get forceMailbox()
+    get forceMailbox()
     {
-        return this.#config.send?.forceMailbox;
+        return this.config.send?.forceMailbox;
     }
 
-    static get smtpPort(): number
+    get smtpPort(): number
     {
-        return this.#config.receive?.port ?? this.getConfigArg('receive.port', 'number') ?? 25;
+        return this.config.receive?.port ?? this.getConfigArg('receive.port', 'number') ?? 25;
     }
 
-    static get smtpListenIp()
+    get smtpListenIp()
     {
-        return this.#config.receive?.listenAddress;
+        return this.config.receive?.listenAddress;
     }
 
-    static get smtpSecure()
+    get smtpSecure()
     {
-        return Boolean(this.#config.receive?.secure);
+        return Boolean(this.config.receive?.secure);
     }
 
-    static get smtpTlsKeyPath()
+    get smtpTlsKeyPath()
     {
-        return this.#config.receive?.tlsKeyPath;
+        return this.config.receive?.tlsKeyPath;
     }
 
-    static get smtpTlsKey()
+    get smtpTlsKey()
     {
         if(this.smtpTlsKeyPath && fs.existsSync(this.smtpTlsKeyPath))
             return fs.readFileSync(this.smtpTlsKeyPath);
     }
 
-    static get smtpTlsCertPath()
+    get smtpTlsCertPath()
     {
-        return this.#config.receive?.tlsCertPath;
+        return this.config.receive?.tlsCertPath;
     }
 
-    static get smtpTlsCert()
+    get smtpTlsCert()
     {
         if(this.smtpTlsCertPath && fs.existsSync(this.smtpTlsCertPath))
             return fs.readFileSync(this.smtpTlsCertPath);
     }
 
-    static get smtpAllowTls()
+    get smtpAllowTls()
     {
         return Boolean(this.smtpTlsCertPath && this.smtpTlsKeyPath && fs.existsSync(this.smtpTlsCertPath) && fs.existsSync(this.smtpTlsKeyPath));
     }
 
     /** Maximum message size in bytes */
-    static get smtpMaxSize(): number | undefined
+    get smtpMaxSize(): number | undefined
     {
-        const matches = this.#config.receive?.maxSize?/^(\d+)(k|m)$/.exec(this.#config.receive.maxSize.toLowerCase()):undefined;
+        const matches = this.config.receive?.maxSize?/^(\d+)(k|m)$/.exec(this.config.receive.maxSize.toLowerCase()):undefined;
 
         if(matches)
         {
@@ -254,95 +262,95 @@ export class Config
         return 100*1024*1024; // Default to 100MB
     }
 
-    static get smtpBanner()
+    get smtpBanner()
     {
-        return this.#config.receive?.banner;
+        return this.config.receive?.banner;
     }
 
-    static get smtpAllowInsecureAuth()
+    get smtpAllowInsecureAuth()
     {
-        return this.#config.receive?.allowInsecureAuth;
+        return this.config.receive?.allowInsecureAuth;
     }
 
-    static get smtpRequireAuth()
+    get smtpRequireAuth()
     {
-        return this.#config.receive?.requireAuth;
+        return this.config.receive?.requireAuth;
     }
 
-    static get smtpUsers()
+    get smtpUsers()
     {
-        return this.#config.receive?.users;
+        return this.config.receive?.users;
     }
 
-    static get smtpRateLimitDuration()
+    get smtpRateLimitDuration()
     {
-        return this.#config.receive?.rateLimit?.duration ?? 600;
+        return this.config.receive?.rateLimit?.duration ?? 600;
     }
 
-    static get smtpRateLimitLimit()
+    get smtpRateLimitLimit()
     {
-        return this.#config.receive?.rateLimit?.limit ?? 10000;
+        return this.config.receive?.rateLimit?.limit ?? 10000;
     }
 
-    static get smtpAuthLimitDuration()
+    get smtpAuthLimitDuration()
     {
-        return this.#config.receive?.authLimit?.duration ?? 60;
+        return this.config.receive?.authLimit?.duration ?? 60;
     }
 
-    static get smtpAuthLimitLimit()
+    get smtpAuthLimitLimit()
     {
-        return this.#config.receive?.authLimit?.limit ?? 10;
+        return this.config.receive?.authLimit?.limit ?? 10;
     }
 
-    static get httpProxyHost()
+    get httpProxyHost()
     {
-        return this.#config.httpProxy?.host;
+        return this.config.httpProxy?.host;
     }
 
-    static get httpProxyPort()
+    get httpProxyPort()
     {
-        return this.#config.httpProxy?.port;
+        return this.config.httpProxy?.port;
     }
 
-    static get httpProxyProtocol(): Required<Required<IConfig>['httpProxy']>['protocol']
+    get httpProxyProtocol(): Required<Required<IConfig>['httpProxy']>['protocol']
     {
-        return this.#config.httpProxy?.protocol ?? 'http';
+        return this.config.httpProxy?.protocol ?? 'http';
     }
 
-    static get httpProxyUsername()
+    get httpProxyUsername()
     {
-        return this.#config.httpProxy?.username;
+        return this.config.httpProxy?.username;
     }
 
-    static get httpProxyPassword()
+    get httpProxyPassword()
     {
-        return this.#config.httpProxy?.username;
+        return this.config.httpProxy?.username;
     }
 
-    static get httpProxyConfig(): AxiosProxyConfig | undefined
+    get httpProxyConfig(): AxiosProxyConfig | undefined
     {
         if(this.httpProxyHost && this.httpProxyPort)
         {
             return {
-                host: Config.httpProxyHost!,
-                port: Config.httpProxyPort!,
-                protocol: Config.httpProxyProtocol,
-                auth: (Config.httpProxyUsername && Config.httpProxyPassword)?{
-                    username: Config.httpProxyUsername,
-                    password: Config.httpProxyPassword,
+                host: this.httpProxyHost!,
+                port: this.httpProxyPort!,
+                protocol: this.httpProxyProtocol,
+                auth: (this.httpProxyUsername && this.httpProxyPassword)?{
+                    username: this.httpProxyUsername,
+                    password: this.httpProxyPassword,
                 }:undefined,
             };
         }
     }
 
     /** Check if an IP address is allowed to connect */
-    static isIpAllowed(clientIp: string): boolean
+    isIpAllowed(clientIp: string): boolean
     {
-        if(!this.#config.receive?.ipWhitelist) // Setting is undefined? Then all addresses are allowed
+        if(!this.config.receive?.ipWhitelist) // Setting is undefined? Then all addresses are allowed
             return true;
         else
         {
-            for(const whitelisted of this.#config.receive?.ipWhitelist)
+            for(const whitelisted of this.config.receive?.ipWhitelist)
             {
                 if(IPCIDR.isValidCIDR(whitelisted)) // It's a CIDR?
                 {
@@ -359,49 +367,73 @@ export class Config
     }
 
     /** Check if a FROM address is allowed */
-    static isFromAllowed(from: string, username?: string): boolean
+    isFromAllowed(from: string, username?: string): boolean
     {
-        const userAllowed = username?this.#config.receive?.users?.find(user=>user.username===username)?.allowedFrom:undefined;
+        const userAllowed = username?this.config.receive?.users?.find(user=>user.username===username)?.allowedFrom:undefined;
 
         if(userAllowed) // There are user specific allowed rules?
             return userAllowed.some(allowed=>allowed.toLowerCase()===from.toLowerCase());
-        if(!this.#config.receive?.allowedFrom) // Setting is undefined? Then all addresses are allowed
+        if(!this.config.receive?.allowedFrom) // Setting is undefined? Then all addresses are allowed
             return true;
         else
-            return this.#config.receive.allowedFrom.some(allowed=>allowed.toLowerCase()===from.toLowerCase());
+            return this.config.receive.allowedFrom.some(allowed=>allowed.toLowerCase()===from.toLowerCase());
     }
 
-    static isUserAllowed(username: string, password: string): boolean
+    isUserAllowed(username: string, password: string): boolean
     {
-        return Boolean(this.#config.receive?.users?.some(user=>(user.username===username && user.password===password)));
+        return Boolean(this.config.receive?.users?.some(user=>(user.username===username && user.password===password)));
     }
 
-    static get #config(): IConfig
+    get config(): IConfig
     {
         if(this.#configData === undefined) // We need to load the config first?
         {
-            const configFileArgs = process.argv.find(arg=>arg.startsWith('--config=') && arg.length > 9);
-            const configFile = configFileArgs?configFileArgs.substring(9):'config.yml';
-
             try {
-                const data = fs.readFileSync(configFile);
+                const data = fs.readFileSync(this.configFile);
                 try {
                     this.#configData = parseYaml(data.toString('utf-8'));
                 } catch(error: any) {
                     throw `Failed to parse YAML: ${String(error)}`;
                 }
             } catch(error: any) {
-                throw new Error(`Unable to read config file "${configFile}". ${String(error)}`);
+                throw new Error(`Unable to read config file "${this.configFile}". ${String(error)}`);
             }
         }
 
         return this.#configData!;
     }
 
+    set config(val: IConfig)
+    {
+        this.#configData = val;
+    }
+
+    get configFile(): string
+    {
+        if(this.#configFile === undefined)
+        {
+            const configFileArgs = process.argv.find(arg=>arg.startsWith('--config=') && arg.length > 9);
+            this.#configFile = configFileArgs?configFileArgs.substring(9):'config.yml';
+        }
+
+        return this.#configFile;
+    }
+
+    save(configFile?: string)
+    {
+        if(configFile) this.#configFile = configFile;
+        fs.writeFileSync(this.configFile, '# This next line loads the schema for this config file to detect issues,\n' +
+            '# provide additional information and add autocomplete when editing this file\n' +
+            '# (you might need to install an extension in your IDE for this)\n' +
+            '# yaml-language-server: $schema=https://raw.githubusercontent.com/SMTP2Graph/SMTP2Graph/main/config.schema.json\n\n' +
+            stringifyYaml(this.config, {lineWidth: 0})
+        );
+    }
+
     /** Get config value from CLI argument */
-    static getConfigArg(key: string, type: 'string'): string|undefined;
-    static getConfigArg(key: string, type: 'number'): number|undefined;
-    static getConfigArg(key: string, type: 'number'|'string'): number|string|undefined
+    getConfigArg(key: string, type: 'string'): string|undefined;
+    getConfigArg(key: string, type: 'number'): number|undefined;
+    getConfigArg(key: string, type: 'number'|'string'): number|string|undefined
     {
         key = key.toLowerCase();
         const arg = process.argv.find(f=>f.toLowerCase().startsWith(`--${key}`));

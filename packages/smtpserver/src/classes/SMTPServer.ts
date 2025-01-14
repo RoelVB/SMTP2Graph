@@ -6,8 +6,7 @@ import MailComposer from 'nodemailer/lib/mail-composer';
 import addressparser, { Address } from 'nodemailer/lib/addressparser';
 const Splitter = require('mailsplit').Splitter;
 const Joiner = require('mailsplit').Joiner;
-import { Config } from '@smtp2graph/common/src/Config';
-import { prefixedLog } from './Constants';
+import { prefixedLog, StaticConfig } from './Constants';
 import { MailQueue } from './MailQueue';
 
 const log = prefixedLog('SMTPServer');
@@ -17,12 +16,12 @@ export class SMTPServer
     #server: NodeSMTP;
     #queue: MailQueue;
     #rateLimiter = new RateLimiterMemory({
-        duration: Config.smtpRateLimitDuration,
-        points: Config.smtpRateLimitLimit,
+        duration: StaticConfig.smtpRateLimitDuration,
+        points: StaticConfig.smtpRateLimitLimit,
     });
     #authLimiter = new RateLimiterMemory({
-        duration: Config.smtpAuthLimitDuration,
-        points: Config.smtpAuthLimitLimit,
+        duration: StaticConfig.smtpAuthLimitDuration,
+        points: StaticConfig.smtpAuthLimitLimit,
     });
 
     constructor(queue: MailQueue)
@@ -33,14 +32,14 @@ export class SMTPServer
             onAuth: this.#onAuth,
             onMailFrom: this.#onMailFrom,
             onData: this.#onData,
-            authOptional: !Config.smtpRequireAuth,
-            banner: Config.smtpBanner ?? `SMTP2Graph ${VERSION}`,
-            size: Config.smtpMaxSize,
-            secure: Config.smtpSecure,
-            key: Config.smtpTlsKey,
-            cert: Config.smtpTlsCert,
-            allowInsecureAuth: Config.smtpAllowTls?Config.smtpAllowInsecureAuth:true,
-            disabledCommands: Config.smtpAllowTls?undefined:['STARTTLS'],
+            authOptional: !StaticConfig.smtpRequireAuth,
+            banner: StaticConfig.smtpBanner ?? `SMTP2Graph ${VERSION}`,
+            size: StaticConfig.smtpMaxSize,
+            secure: StaticConfig.smtpSecure,
+            key: StaticConfig.smtpTlsKey,
+            cert: StaticConfig.smtpTlsCert,
+            allowInsecureAuth: StaticConfig.smtpAllowTls?StaticConfig.smtpAllowInsecureAuth:true,
+            disabledCommands: StaticConfig.smtpAllowTls?undefined:['STARTTLS'],
         });
     }
 
@@ -49,8 +48,8 @@ export class SMTPServer
         return new Promise<void>((resolve, reject)=>{
             this.#server.on('error', reject);
 
-            this.#server.listen(Config.smtpPort, Config.smtpListenIp, ()=>{
-                log('info', `Server started on ${Config.smtpListenIp || 'any-ip'}:${Config.smtpPort}`);
+            this.#server.listen(StaticConfig.smtpPort, StaticConfig.smtpListenIp, ()=>{
+                log('info', `Server started on ${StaticConfig.smtpListenIp || 'any-ip'}:${StaticConfig.smtpPort}`);
                 this.#server.off('error', reject);
                 this.#server.on('error', error=>{
                     log('error', `An error occured`, {error});
@@ -62,7 +61,7 @@ export class SMTPServer
 
     #onConnect: SMTPServerOptions['onConnect'] = (session, callback)=>
     {
-        if(Config.isIpAllowed(session.remoteAddress))
+        if(StaticConfig.isIpAllowed(session.remoteAddress))
         {
             this.#rateLimiter.consume('all').then((rateLimit)=>{
                 callback();
@@ -79,7 +78,7 @@ export class SMTPServer
         this.#authLimiter.consume(session.remoteAddress).then((rateLimit)=>{
             if(!auth.username || !auth.password)
                 callback(new Error('Unsupported authentication method'));
-            else if(Config.isUserAllowed(auth.username, auth.password))
+            else if(StaticConfig.isUserAllowed(auth.username, auth.password))
                 callback(null, {user: auth.username});
             else
                 callback(new Error('Invalid login'));
@@ -90,7 +89,7 @@ export class SMTPServer
 
     #onMailFrom: SMTPServerOptions['onMailFrom'] = (address, session, callback)=>
     {
-        if(Config.isFromAllowed(address.address, session.user))
+        if(StaticConfig.isFromAllowed(address.address, session.user))
             callback();
         else
             callback(new Error(`FROM "${address.address}" not allowed`));

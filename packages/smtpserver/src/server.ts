@@ -1,5 +1,4 @@
-import { Config } from '@smtp2graph/common/src/Config';
-import { log } from './classes/Constants';
+import { StaticConfig, log } from './classes/Constants';
 import { MailQueue } from './classes/MailQueue';
 import { SMTPServer } from './classes/SMTPServer';
 
@@ -10,7 +9,7 @@ else
     (async ()=>{
         // Validate the config before continuing
         try {
-            Config.validate();
+            StaticConfig.validate();
         } catch(error) {
             await log('error', `Invalid config. ${String(error)}`, {error});
             process.exit(1);
