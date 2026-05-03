@@ -58,4 +58,23 @@ export class MailQueue
         
         return parsed;
     }
+
+    static async findFileByMessageId(messageId: string)
+    {
+        const files = fs.readdirSync(MailQueue.#queueDir);
+        for(const file of files)
+        {
+            if(file.endsWith('.eml'))
+            {
+                const mail = await MailQueue.readFile(path.join(MailQueue.#queueDir, file), true);
+                if(mail.messageId === messageId)
+                    return {mail, file};
+            }
+        }
+    }
+
+    static deleteFile(file: string)
+    {
+        fs.unlinkSync(path.join(MailQueue.#queueDir, file));
+    }
 }

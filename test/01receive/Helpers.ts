@@ -5,6 +5,15 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { AddressObject, EmailAddress, ParsedMail } from 'mailparser';
 import { MailQueue } from '../classes/MailQueue';
 
+declare module 'nodemailer/lib/smtp-transport'
+{
+    interface Options
+    {
+        /** Pooled SMTP maintains a fixed number of persistent TCP/TLS connections to your SMTP server and reuses them across multiple messages */
+        pool?: boolean;
+    }
+}
+
 export interface ISubmitMail
 {
     transportOptions?: SMTPTransport.Options;

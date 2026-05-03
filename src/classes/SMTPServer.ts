@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { SMTPServer as NodeSMTP, SMTPServerOptions } from 'smtp-server';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import MailComposer from 'nodemailer/lib/mail-composer';
@@ -143,7 +144,7 @@ export class SMTPServer
         });
 
         // Create the EML file
-        const tmpFile = path.join(this.#queue.tempPath, `${session.id}.eml`);
+        const tmpFile = path.join(this.#queue.tempPath, `${session.id}-${randomUUID().toString()}.eml`);
         const writeStream = fs.createWriteStream(tmpFile);
         const mailCompile = mail.compile();
         (mailCompile as any).keepBcc = true;
